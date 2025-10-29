@@ -78,7 +78,7 @@ const EntryCard = ({ entry, onClick, onDelete }) => {
           {topics.map((topic, index) => (
             <span
               key={index}
-              className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full"
+              className="px-3 py-1 bg-gray-100 text-gray-900 text-xs font-medium rounded-full"
             >
               {topic}
             </span>

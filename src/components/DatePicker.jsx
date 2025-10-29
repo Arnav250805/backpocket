@@ -126,9 +126,9 @@ const DatePicker = ({ value, onChange, label, required = false }) => {
         className={`
           h-12 rounded-lg text-sm font-medium transition-all
           ${isSelected 
-            ? 'bg-blue-600 text-white shadow-md' 
+            ? 'bg-gray-900 text-white shadow-md' 
             : isTodayDate
-            ? 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+            ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
             : 'hover:bg-gray-100 text-gray-700'
           }
         `}
@@ -150,7 +150,7 @@ const DatePicker = ({ value, onChange, label, required = false }) => {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-white text-left flex items-center justify-between hover:border-gray-400"
+        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none transition bg-white text-left flex items-center justify-between hover:border-gray-400 text-sm"
       >
         <span className={value ? 'text-gray-900' : 'text-gray-400'}>
           {formatDisplayDate(value)}
@@ -190,7 +190,7 @@ const DatePicker = ({ value, onChange, label, required = false }) => {
                 <button
                   type="button"
                   onClick={goToToday}
-                  className="px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded transition"
+                  className="px-2 py-1 text-xs font-medium text-gray-900 hover:bg-gray-100 rounded transition"
                 >
                   Today
                 </button>

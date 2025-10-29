@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import DatePicker from './DatePicker';
+import { loadEntries } from '../utils/storage';
 
 /**
  * AddEntry Modal Component
@@ -66,6 +67,32 @@ const AddEntry = ({ isOpen, onClose, onSave }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Auto-fill contact info when name matches existing entry
+    if (name === 'firstName' || name === 'lastName') {
+      const updatedData = { ...formData, [name]: value };
+      
+      // Only check if both first and last name are filled
+      if (updatedData.firstName && updatedData.lastName) {
+        const existingEntries = loadEntries();
+        const matchingEntry = existingEntries.find(
+          entry => 
+            entry.firstName.toLowerCase() === updatedData.firstName.toLowerCase() &&
+            entry.lastName.toLowerCase() === updatedData.lastName.toLowerCase()
+        );
+        
+        // Auto-fill email and phone if found
+        if (matchingEntry && (matchingEntry.email || matchingEntry.phone)) {
+          setFormData(prev => ({
+            ...prev,
+            [name]: value,
+            email: matchingEntry.email || prev.email,
+            phone: matchingEntry.phone || prev.phone,
+          }));
+          return;
+        }
+      }
+    }
   };
 
   /**
@@ -159,7 +186,7 @@ const AddEntry = ({ isOpen, onClose, onSave }) => {
                   value={formData.firstName}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none transition text-sm"
                   placeholder="John"
                 />
               </div>
@@ -173,7 +200,7 @@ const AddEntry = ({ isOpen, onClose, onSave }) => {
                   value={formData.lastName}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none transition text-sm"
                   placeholder="Doe"
                 />
               </div>
@@ -213,7 +240,7 @@ const AddEntry = ({ isOpen, onClose, onSave }) => {
                 value={formData.notes}
                 onChange={handleChange}
                 rows="6"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition resize-none"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none transition resize-none text-sm"
                 placeholder="What did you discuss?"
               />
               
@@ -224,7 +251,7 @@ const AddEntry = ({ isOpen, onClose, onSave }) => {
                     <button
                       type="button"
                       onClick={startListening}
-                      className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition font-medium text-sm flex items-center gap-2"
+                      className="px-4 py-2 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 transition font-medium text-sm flex items-center gap-2"
                     >
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M10 3a3 3 0 00-3 3v4a3 3 0 006 0V6a3 3 0 00-3-3z" />
@@ -309,7 +336,7 @@ const AddEntry = ({ isOpen, onClose, onSave }) => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none transition text-sm"
                   placeholder="john@example.com"
                 />
               </div>
@@ -322,7 +349,7 @@ const AddEntry = ({ isOpen, onClose, onSave }) => {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none transition text-sm"
                   placeholder="+1 (555) 123-4567"
                 />
               </div>
@@ -332,7 +359,7 @@ const AddEntry = ({ isOpen, onClose, onSave }) => {
             <div className="flex gap-3 pt-4">
               <button
                 type="submit"
-                className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold shadow-lg shadow-blue-500/30"
+                className="flex-1 px-6 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition font-semibold shadow-lg text-sm"
               >
                 Save Entry
               </button>

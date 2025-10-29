@@ -17,23 +17,12 @@ export const useRotatingQuote = () => {
   const [quote, setQuote] = useState(getTimeBasedQuote());
 
   useEffect(() => {
-    // Calculate milliseconds until next hour
-    const now = new Date();
-    const msUntilNextHour = (60 - now.getMinutes()) * 60 * 1000 - now.getSeconds() * 1000;
-
-    // Set initial timer to sync with the hour
-    const initialTimer = setTimeout(() => {
+    // Change quote every 10 minutes
+    const interval = setInterval(() => {
       setQuote(getTimeBasedQuote());
-      
-      // Then set up hourly interval
-      const hourlyInterval = setInterval(() => {
-        setQuote(getTimeBasedQuote());
-      }, 60 * 60 * 1000); // 1 hour in milliseconds
+    }, 10 * 60 * 1000); // 10 minutes in milliseconds
 
-      return () => clearInterval(hourlyInterval);
-    }, msUntilNextHour);
-
-    return () => clearTimeout(initialTimer);
+    return () => clearInterval(interval);
   }, []);
 
   return quote;

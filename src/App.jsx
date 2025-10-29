@@ -155,10 +155,11 @@ function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900">
-                BackPocket
+              <h1 className="text-3xl text-gray-900">
+                <span className="font-bold">BackPocket</span>
+                <span className="italic font-normal"> - Making Conversations Stick</span>
               </h1>
-              <p className="text-gray-500 mt-2 italic">
+              <p className="text-gray-500 mt-2 italic text-sm">
                 "{quote.text}"
                 <span className="text-gray-400 not-italic ml-2">
                   — {quote.author}
@@ -168,7 +169,7 @@ function App() {
           </div>
           
           {/* Search Bar */}
-          <SearchBar onSearch={handleSearch} onExport={handleExport} />
+          <SearchBar onSearch={handleSearch} onAddEntry={() => setIsAddModalOpen(true)} />
         </div>
       </header>
 
@@ -196,7 +197,7 @@ function App() {
             {entries.length === 0 && (
               <button
                 onClick={() => setIsAddModalOpen(true)}
-                className="px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-semibold shadow-lg shadow-blue-500/30"
+                className="px-8 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition font-semibold shadow-lg"
               >
                 Add First Entry
               </button>
@@ -216,17 +217,18 @@ function App() {
         )}
       </main>
 
-      {/* Floating Add Button */}
+      {/* Floating Export Button */}
       <motion.button
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
-        onClick={() => setIsAddModalOpen(true)}
-        className="fixed bottom-8 right-8 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl hover:bg-blue-700 transition flex items-center justify-center z-30"
+        onClick={handleExport}
+        className="fixed bottom-8 right-8 w-14 h-14 bg-gray-900 text-white rounded-full shadow-2xl hover:bg-gray-800 transition flex items-center justify-center z-30"
+        title="Export Data"
       >
-        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
         </svg>
       </motion.button>
 

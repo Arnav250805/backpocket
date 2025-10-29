@@ -3,11 +3,11 @@ import { useState } from 'react';
 /**
  * SearchBar Component
  * 
- * Provides search input and export functionality.
+ * Provides search input and add entry button.
  * Search triggers fuzzy matching across all entry fields.
  * 
  * @param {Function} onSearch - Callback with search query
- * @param {Function} onExport - Callback to export data
+ * @param {Function} onAddEntry - Callback to open add entry modal
  * 
  * FUTURE BACKEND INTEGRATION:
  * - Add advanced search filters (date range, topics, has audio, etc.)
@@ -15,7 +15,7 @@ import { useState } from 'react';
  * - Add search history
  * - Server-side search for large datasets
  */
-const SearchBar = ({ onSearch, onExport }) => {
+const SearchBar = ({ onSearch, onAddEntry }) => {
   const [query, setQuery] = useState('');
 
   const handleChange = (e) => {
@@ -43,7 +43,7 @@ const SearchBar = ({ onSearch, onExport }) => {
           value={query}
           onChange={handleChange}
           placeholder="Search by name, topic, or date..."
-          className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-white"
+          className="w-full pl-12 pr-12 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none transition bg-white text-sm"
         />
         {query && (
           <button
@@ -57,15 +57,15 @@ const SearchBar = ({ onSearch, onExport }) => {
         )}
       </div>
 
-      {/* Export Button */}
+      {/* Add Entry Button */}
       <button
-        onClick={onExport}
-        className="px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition font-medium flex items-center justify-center gap-2 shadow-lg"
+        onClick={onAddEntry}
+        className="px-6 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition font-medium flex items-center justify-center gap-2 shadow-lg text-sm"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
-        Export
+        Add Entry
       </button>
     </div>
   );
