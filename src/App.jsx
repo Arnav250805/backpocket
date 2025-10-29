@@ -7,21 +7,14 @@ import EntryModal from './components/EntryModal';
 import DeleteConfirmModal from './components/DeleteConfirmModal';
 import WelcomeModal from './components/WelcomeModal';
 import SearchBar from './components/SearchBar';
-import { loadEntries, addEntry, deleteEntry, exportData } from './utils/storage';
 import { useRotatingQuote } from './hooks/useRotatingQuote';
+import { getOrCreateUser, fetchEntries, createEntry, deleteEntryFromDB, exportEntries } from './lib/supabase';
 
 /**
- * Main App Component
+ * Main App Component with Supabase Backend
  * 
  * Manages all state and orchestrates the PRM application.
- * Handles entry CRUD operations, search, and modal states.
- * 
- * FUTURE BACKEND INTEGRATION:
- * - Add authentication context (user login/logout)
- * - Fetch entries from API on mount
- * - Subscribe to real-time updates (if using Firebase/Supabase)
- * - Add offline sync capability
- * - Implement loading and error states for API calls
+ * Now connected to Supabase for cloud data storage and sync!
  */
 function App() {
   // State management
@@ -33,49 +26,93 @@ function App() {
   const [deleteCandidate, setDeleteCandidate] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [userName, setUserName] = useState(null);
+  const [userId, setUserId] = useState(null);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [loading, setLoading] = useState(true);
   
-  // Get rotating quote (changes hourly or on refresh)
+  // Get rotating quote (changes every 10 minutes or on refresh)
   const quote = useRotatingQuote();
 
   /**
    * Check if user has visited before
    * If not, show welcome modal to get their name
+   * Also get or create user in Supabase
    */
   useEffect(() => {
     const savedName = localStorage.getItem('userName');
-    if (savedName) {
+    const savedUserId = localStorage.getItem('userId');
+    
+    if (savedName && savedUserId) {
       setUserName(savedName);
+      setUserId(savedUserId);
+      loadUserEntries(savedUserId);
     } else {
       setShowWelcome(true);
+      setLoading(false);
     }
   }, []);
 
   /**
-   * Load entries from localStorage on component mount
-   * 
-   * BACKEND: Replace with API call
-   * const fetchEntries = async () => {
-   *   const { data } = await supabase.from('entries').select('*');
-   *   setEntries(data);
-   *   setFilteredEntries(data);
-   * };
+   * Load entries from Supabase for the current user
    */
-  useEffect(() => {
-    const savedEntries = loadEntries();
-    setEntries(savedEntries);
-    setFilteredEntries(savedEntries);
-  }, []);
+  const loadUserEntries = async (uid) => {
+    setLoading(true);
+    const { data, error } = await fetchEntries(uid);
+    
+    if (error) {
+      console.error('Error loading entries:', error);
+      setLoading(false);
+      return;
+    }
+
+    // Transform Supabase data to match our frontend format
+    const transformedEntries = data.map(entry => ({
+      id: entry.id,
+      firstName: entry.first_name,
+      lastName: entry.last_name,
+      date: entry.date,
+      topics: entry.topics || [],
+      notes: entry.notes,
+      email: entry.email,
+      phone: entry.phone,
+      audioUrl: entry.audio_url,
+      transcript: entry.transcript,
+      createdAt: entry.created_at,
+    }));
+
+    setEntries(transformedEntries);
+    setFilteredEntries(transformedEntries);
+    setLoading(false);
+  };
 
   /**
-   * Handle saving a new entry
-   * Updates both entries and filteredEntries state
-   * 
-   * BACKEND: Make API call first, then update state
+   * Handle saving a new entry to Supabase
    */
-  const handleSaveEntry = (entryData) => {
-    const newEntry = addEntry(entryData);
-    const updatedEntries = [newEntry, ...entries];
+  const handleSaveEntry = async (entryData) => {
+    const { data, error } = await createEntry(userId, entryData);
+    
+    if (error) {
+      console.error('Error creating entry:', error);
+      alert('Failed to save entry. Please try again.');
+      return;
+    }
+
+    // Transform and add to state
+    const transformedEntry = {
+      id: data.id,
+      firstName: data.first_name,
+      lastName: data.last_name,
+      date: data.date,
+      topics: data.topics || [],
+      notes: data.notes,
+      email: data.email,
+      phone: data.phone,
+      audioUrl: data.audio_url,
+      transcript: data.transcript,
+      createdAt: data.created_at,
+    };
+
+    const updatedEntries = [transformedEntry, ...entries];
     setEntries(updatedEntries);
     setFilteredEntries(updatedEntries);
   };
@@ -129,14 +166,18 @@ function App() {
   };
 
   /**
-   * Confirm deletion
-   * Removes entry from localStorage and updates state
-   * 
-   * BACKEND: Make API call to delete from database
-   * Also delete associated audio file from storage if exists
+   * Confirm deletion - delete from Supabase
    */
-  const handleConfirmDelete = (id) => {
-    const updatedEntries = deleteEntry(id);
+  const handleConfirmDelete = async (id) => {
+    const { error } = await deleteEntryFromDB(id);
+    
+    if (error) {
+      console.error('Error deleting entry:', error);
+      alert('Failed to delete entry. Please try again.');
+      return;
+    }
+
+    const updatedEntries = entries.filter(entry => entry.id !== id);
     setEntries(updatedEntries);
     setFilteredEntries(updatedEntries);
     setIsDeleteModalOpen(false);
@@ -158,21 +199,49 @@ function App() {
   };
 
   /**
-   * Handle export to JSON
+   * Handle export to JSON from Supabase
    */
   const handleExport = () => {
-    exportData();
+    exportEntries(userId);
   };
 
   /**
    * Handle welcome modal submission
-   * Save user's name to localStorage
+   * Create or get user in Supabase and save to localStorage
    */
-  const handleWelcomeSubmit = (name) => {
+  const handleWelcomeSubmit = async (name) => {
+    const { data, error } = await getOrCreateUser(name);
+    
+    if (error) {
+      console.error('Error creating user:', error);
+      alert('Failed to create user. Please try again.');
+      return;
+    }
+
+    // Save to localStorage for persistence
     localStorage.setItem('userName', name);
+    localStorage.setItem('userId', data.id);
+    
     setUserName(name);
+    setUserId(data.id);
     setShowWelcome(false);
+    setLoading(false);
+    
+    // Load entries for this user
+    loadUserEntries(data.id);
   };
+
+  // Show loading spinner while fetching data
+  if (loading && !showWelcome) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block w-16 h-16 border-4 border-gray-300 border-t-black rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-600">Loading your conversations...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
