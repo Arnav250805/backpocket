@@ -5,6 +5,7 @@ import AddEntry from './components/AddEntry';
 import EntryCard from './components/EntryCard';
 import EntryModal from './components/EntryModal';
 import DeleteConfirmModal from './components/DeleteConfirmModal';
+import WelcomeModal from './components/WelcomeModal';
 import SearchBar from './components/SearchBar';
 import { loadEntries, addEntry, deleteEntry, exportData } from './utils/storage';
 import { useRotatingQuote } from './hooks/useRotatingQuote';
@@ -31,9 +32,24 @@ function App() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [deleteCandidate, setDeleteCandidate] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [userName, setUserName] = useState(null);
+  const [showWelcome, setShowWelcome] = useState(false);
   
   // Get rotating quote (changes hourly or on refresh)
   const quote = useRotatingQuote();
+
+  /**
+   * Check if user has visited before
+   * If not, show welcome modal to get their name
+   */
+  useEffect(() => {
+    const savedName = localStorage.getItem('userName');
+    if (savedName) {
+      setUserName(savedName);
+    } else {
+      setShowWelcome(true);
+    }
+  }, []);
 
   /**
    * Load entries from localStorage on component mount
@@ -148,17 +164,49 @@ function App() {
     exportData();
   };
 
+  /**
+   * Handle welcome modal submission
+   * Save user's name to localStorage
+   */
+  const handleWelcomeSubmit = (name) => {
+    localStorage.setItem('userName', name);
+    setUserName(name);
+    setShowWelcome(false);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl text-gray-900">
-                <span className="font-bold">BackPocket</span>
-                <span className="italic font-normal"> - Making Conversations Stick</span>
-              </h1>
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <h1 className="text-3xl text-gray-900">
+                  <span className="font-bold">BackPocket</span>
+                  <span className="italic font-normal"> - Making Conversations Stick</span>
+                </h1>
+                {userName && (
+                  <div className="text-right">
+                    <p className="text-base text-gray-600">
+                      Hi, {userName}
+                    </p>
+                    <p className="text-base text-gray-600">
+                      {new Date().toLocaleDateString('en-GB', { 
+                        day: 'numeric', 
+                        month: 'long', 
+                        year: 'numeric' 
+                      }).replace(/(\d+)/, (day) => {
+                        const suffix = day.endsWith('1') && day !== '11' ? 'st' 
+                          : day.endsWith('2') && day !== '12' ? 'nd'
+                          : day.endsWith('3') && day !== '13' ? 'rd' 
+                          : 'th';
+                        return day + suffix;
+                      })}
+                    </p>
+                  </div>
+                )}
+              </div>
               <p className="text-gray-500 mt-2 italic text-sm">
                 "{quote.text}"
                 <span className="text-gray-400 not-italic ml-2">
@@ -233,6 +281,8 @@ function App() {
       </motion.button>
 
       {/* Modals */}
+      {showWelcome && <WelcomeModal onSubmit={handleWelcomeSubmit} />}
+
       <AddEntry
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
